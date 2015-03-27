@@ -5,9 +5,18 @@
 char ssid[] = "GRV-Secure";      //  your network SSID (name) 
 char pass[] = "M33@W1r3S3cur3";  // your network password
 char server[] = "blockly-bot.herokuapp.com";
-int status = WL_IDLE_STATUS;     // the Wifi radio's status
 WiFiClient client;
 bool maze_completed = false;
+
+void attempt_wifi_connect() {
+  Serial.print("Attempting to connect to WPA SSID: ");
+  Serial.println(ssid);
+  // Connect to WPA/WPA2 network:    
+  WiFi.begin(ssid, pass);
+
+  // wait 10 seconds for connection:
+  delay(10000); 
+}
 
 void setup() {
   //Initialize serial and wait for port to open:
@@ -20,15 +29,9 @@ void setup() {
     while(true);
   } 
   
- // attempt to connect to Wifi network:
- while ( status != WL_CONNECTED) { 
-    Serial.print("Attempting to connect to WPA SSID: ");
-    Serial.println(ssid);
-    // Connect to WPA/WPA2 network:    
-    status = WiFi.begin(ssid, pass);
-
-    // wait 10 seconds for connection:
-    delay(10000);
+  // attempt to connect to Wifi network:
+  while (WiFi.status() != WL_CONNECTED) { 
+    attempt_wifi_connect
   }
    
   // connection success, print to serial
@@ -38,6 +41,10 @@ void setup() {
 //submit a request for the program
 //returns a json string containing a boolean running and an array of arrays program
 String get_program() {
+  // attempt to connect to Wifi network:
+  while (WiFi.status() != WL_CONNECTED) { 
+    attempt_wifi_connect
+  }
   if (client.connect(server, 80)) {
     // Make a HTTP request:
     client.println("GET /getProgram HTTP/1.1");
@@ -53,6 +60,10 @@ String get_program() {
 //submit a request for the serve to halt execution
 //return a json string containing a boolean success
 String stop_program() {
+  // attempt to connect to Wifi network:
+  while (WiFi.status() != WL_CONNECTED) { 
+    attempt_wifi_connect
+  }
   if (client.connect(server, 80)) {
     // Make a HTTP request:
     client.println("GET /stopProgram HTTP/1.1");
@@ -68,6 +79,10 @@ String stop_program() {
 //tell the server which block we are on so it can highlight the block for the user
 //return a json string containing a boolean running
 String highlight_block(int block_id) {
+  // attempt to connect to Wifi network:
+  while (WiFi.status() != WL_CONNECTED) { 
+    attempt_wifi_connect
+  }
   if (client.connect(server, 80)) {
     // Make a HTTP request:
     //make a string because we have to know the length of the data we are posting
