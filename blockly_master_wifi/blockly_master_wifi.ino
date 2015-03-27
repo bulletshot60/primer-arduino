@@ -4,7 +4,7 @@
 
 char ssid[] = "GRV-Secure";      //  your network SSID (name) 
 char pass[] = "M33@W1r3S3cur3";  // your network password
-char server[] = "blockly-bot.herokuapp.com";
+char server[] = "primer-bot.herokuapp.com";
 WiFiClient client;
 bool maze_completed = false;
 
