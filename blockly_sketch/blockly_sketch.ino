@@ -31,7 +31,7 @@ void setup() {
   
   // attempt to connect to Wifi network:
   while (WiFi.status() != WL_CONNECTED) { 
-    attempt_wifi_connect
+    attempt_wifi_connect();
   }
    
   // connection success, print to serial
@@ -43,7 +43,7 @@ void setup() {
 String get_program() {
   // attempt to connect to Wifi network:
   while (WiFi.status() != WL_CONNECTED) { 
-    attempt_wifi_connect
+    attempt_wifi_connect();
   }
   if (client.connect(server, 80)) {
     // Make a HTTP request:
@@ -62,7 +62,7 @@ String get_program() {
 String stop_program() {
   // attempt to connect to Wifi network:
   while (WiFi.status() != WL_CONNECTED) { 
-    attempt_wifi_connect
+    attempt_wifi_connect();
   }
   if (client.connect(server, 80)) {
     // Make a HTTP request:
@@ -81,7 +81,7 @@ String stop_program() {
 String highlight_block(int block_id) {
   // attempt to connect to Wifi network:
   while (WiFi.status() != WL_CONNECTED) { 
-    attempt_wifi_connect
+    attempt_wifi_connect();
   }
   if (client.connect(server, 80)) {
     // Make a HTTP request:
