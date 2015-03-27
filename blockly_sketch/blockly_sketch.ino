@@ -21,7 +21,7 @@ void setup() {
   } 
   
  // attempt to connect to Wifi network:
-  while ( status != WL_CONNECTED) { 
+ while ( status != WL_CONNECTED) { 
     Serial.print("Attempting to connect to WPA SSID: ");
     Serial.println(ssid);
     // Connect to WPA/WPA2 network:    
@@ -186,6 +186,17 @@ bool handle_boolean_command(aJsonObject* command_array) {
   }
 }
 
+int handle_goto(aJsonObject* program, int max_command, int label) {
+  for(int i = 0; i < max_command; ++i) {
+    aJsonObject* temp = aJson.getArrayItem(program, i);
+    if(aJson.getArrayItem(temp, 0)->valueint == 1) {
+      if(aJson.getArrayItem(temp, 1)->valueint == label) {
+        return i; 
+      }
+    }
+  }
+}
+
 //execute the program until we reach the end
 void run_program(aJsonObject* program) {
   int current_command = 0, max_command = aJson.getArraySize(program), argument1 = 0;
@@ -205,39 +216,22 @@ void run_program(aJsonObject* program) {
       case 2:  // goto_if_true
         if(last_boolean_value) {
           argument1 = aJson.getArrayItem(command_array, 1)->valueint;
-          for(int i = 0; i < max_command; ++i) {
-             aJsonObject* temp = aJson.getArrayItem(program, i);
-             if(aJson.getArrayItem(temp, 0)->valueint == 1) {
-                 if(aJson.getArrayItem(temp, 1)->valueint == argument1) {
-                   current_command = i; 
-                 }
-             }
-          }
+          current_command = handle_goto(program, max_command, argument1);
+        } else {
+          ++current_command;
         }
         break;
       case 3:  // goto_if_false
         if(!last_boolean_value) {
           argument1 = aJson.getArrayItem(command_array, 1)->valueint;
-          for(int i = 0; i < max_command; ++i) {
-             aJsonObject* temp = aJson.getArrayItem(program, i);
-             if(aJson.getArrayItem(temp, 0)->valueint == 1) {
-                 if(aJson.getArrayItem(temp, 1)->valueint == argument1) {
-                   current_command = i; 
-                 }
-             }
-          }
+          current_command = handle_goto(program, max_command, argument1);
+        } else {
+          ++current_command;  
         }
         break;
       case 4:  // goto
         argument1 = aJson.getArrayItem(command_array, 1)->valueint;
-        for(int i = 0; i < max_command; ++i) {
-           aJsonObject* temp = aJson.getArrayItem(program, i);
-           if(aJson.getArrayItem(temp, 0)->valueint == 1) {
-               if(aJson.getArrayItem(temp, 1)->valueint == argument1) {
-                 current_command = i; 
-               }
-           }
-        }
+        current_command = handle_goto(program, max_command, argument1);
         break;
       case 5:  // turn (01: left, 02: right)
         argument1 = aJson.getArrayItem(command_array, 0)->valueint;
