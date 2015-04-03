@@ -1,6 +1,19 @@
 #include <SPI.h>
+#include <Wire.h>
 #include <WiFi.h>
 #include "aJSON.h"
+
+#define TURN_LEFT 100
+#define TURN_RIGHT 101
+#define MOVE_FORWARD 102
+#define MOVE_BACKWARD 103
+#define RED 104
+#define GREEN 105
+#define BLUE 106
+#define BLACK 107
+
+bool waiting = false;
+int my_color;
 
 char ssid[] = "GRV-Secure";      //  your network SSID (name) 
 char pass[] = "M33@W1r3S3cur3";  // your network password
@@ -9,6 +22,9 @@ WiFiClient client;
 bool maze_completed = false;
 
 void attempt_wifi_connect() {
+  Wire.begin(1);
+  Wire.onReceive(receiveEvent);
+
   Serial.print("Attempting to connect to WPA SSID: ");
   Serial.println(ssid);
   // Connect to WPA/WPA2 network:    
@@ -48,7 +64,7 @@ String get_program() {
   if (client.connect(server, 80)) {
     // Make a HTTP request:
     client.println("GET /getProgram HTTP/1.1");
-    client.println("Host: blockly-bot.herokuapp.com");
+    client.println("Host: primer-bot.herokuapp.com");
     client.println();
   } else {
     // kf you didn't get a connection to the server:
@@ -67,7 +83,7 @@ String stop_program() {
   if (client.connect(server, 80)) {
     // Make a HTTP request:
     client.println("GET /stopProgram HTTP/1.1");
-    client.println("Host: blockly-bot.herokuapp.com");
+    client.println("Host: primer-bot.herokuapp.com");
     client.println();
   } else {
     // kf you didn't get a connection to the server:
@@ -89,7 +105,7 @@ String highlight_block(int block_id) {
     String data = "current_block=";
     data += block_id;
     client.println("POST /setCurrentBlock HTTP/1.1");
-    client.println("Host: blockly-bot.herokuapp.com");
+    client.println("Host: primer-bot.herokuapp.com");
     client.println("Content-Type: application/x-www-form-urlencoded");
     client.print("Content-Length: ");
     client.println(data.length());
@@ -105,7 +121,7 @@ String highlight_block(int block_id) {
 
 //read the json response from teh server ignoring headers
 String read_response() {
-  while(client.connected() && !client.available()) delay(1); //wait for data
+  while(client.connected() && !client.available()) delay(10); //wait for data
   
   String server_response = "";
   bool reading = false;
@@ -123,27 +139,60 @@ String read_response() {
     }
   }
   client.stop();
+  Serial.println("");
   return server_response;
 }
 
 //turn the robot left 90 degrees
 void turn_left() {
-  
+  Wire.beginTransmission(2);
+  Wire.write(TURN_LEFT);
+  Wire.endTransmission();
+  waiting = true;
+  while(waiting) { delay(1000); }
 }
 
 //turn the robot right 90 degrees
 void turn_right() {
-  
+  Wire.beginTransmission(2);
+  Wire.write(TURN_RIGHT);
+  Wire.endTransmission(); 
+  waiting = true;
+  while(waiting) { delay(1000); }
 }
 
 //move forward (note that this assumes we have nothing in front of us, IE call handle_is_facing_wall first)
 void move_forward() {
-  
+  Wire.beginTransmission(2);
+  Wire.write(MOVE_FORWARD);
+  Wire.endTransmission();  
+  waiting = true;
+  while(waiting) { delay(1000); }
 }
 
 //are we obstructed
 bool handle_is_facing_wall() {
-  return false;
+  Serial.println("moving forward");
+  Wire.beginTransmission(2);
+  Wire.write(MOVE_FORWARD);
+  Wire.endTransmission();  
+  waiting = true;
+  while(waiting) { delay(1000); }
+  Serial.println("checking color");
+  Wire.beginTransmission(3);
+  Wire.write(1);
+  Wire.endTransmission();
+  waiting = true;
+  while(waiting) { delay(1000); }
+  int color_over = my_color;
+  Serial.println("backing up");
+  Wire.beginTransmission(2);
+  Wire.write(MOVE_BACKWARD);
+  Wire.endTransmission();  
+  waiting = true;
+  while(waiting) { delay(1000); }
+  
+  return color_over == BLACK;
 }
 
 //was the maze marked as finished
@@ -154,6 +203,19 @@ bool handle_is_completed() {
 //are we facing a wall of a particular color
 bool handle_is_facing_color(aJsonObject* argument1) {
   int color = aJson.getArrayItem(argument1, 0)->valueint;
+  
+  Wire.beginTransmission(3);
+  Wire.write(1);
+  Wire.endTransmission();
+  waiting = true;
+  while(waiting) { delay(1000); }
+  
+  if(color == 1) { //red
+    return my_color == RED;
+  } else if (color == 2) { //green
+    return my_color == GREEN;
+  }
+  
   return false;  
 }
 
@@ -249,7 +311,7 @@ void run_program(aJsonObject* program) {
         current_command = handle_goto(program, max_command, argument1);
         break;
       case 5:  // turn (01: left, 02: right)
-        argument1 = aJson.getArrayItem(command_array, 0)->valueint;
+        argument1 = aJson.getArrayItem(command_array, 1)->valueint;
         if(argument1 == 1) {
           turn_left();
         } else {
@@ -317,10 +379,20 @@ void loop() {
   aJsonObject* program = aJson.getObjectItem(root, "program");
   if(running->valuebool) { //here we go!!
     run_program(program);
-    stop_program();
+    String serverData2 = stop_program();
+    char *data2 = new char[serverData2.length() + 1];
+    for(int i = 0; i < serverData2.length(); ++i) { data2[i] = serverData2[i]; }
+    data2[serverData2.length()] = '\0';
+    Serial.println(data2);
   }
   //note that you must clean up after yourself
   aJson.deleteItem(root); //should also get running and program since they are children
   delete data;
   delay(10000);
+}
+
+void receiveEvent(int howMany) {
+  int x = Wire.read(); // receive byte as an integer
+  my_color = x;
+  waiting = false;
 }
