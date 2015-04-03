@@ -33,12 +33,13 @@ int command = 0;
 void loop() {
   if(command != 0) {
 
+    //process command
     if(command == TURN_LEFT) {
       digitalWrite(RIGHT_DIRECTION_PIN, HIGH);
       digitalWrite(LEFT_DIRECTION_PIN, HIGH);
       analogWrite(RIGHT_SPEED_PIN, 150);
       analogWrite(LEFT_SPEED_PIN, 150);
-      digitalWrite(RIGHT_BRAKE_PIN, LOW);
+      digitalWrite(RIGHT_BRAKE_PIN, LOW); //LOW turns the brake off
       digitalWrite(LEFT_BRAKE_PIN, LOW);
     } else if(command == TURN_RIGHT) {
       digitalWrite(RIGHT_DIRECTION_PIN, LOW);
@@ -69,9 +70,10 @@ void loop() {
     digitalWrite(LEFT_DIRECTION_PIN, LOW);
     analogWrite(RIGHT_SPEED_PIN, 0);
     analogWrite(LEFT_SPEED_PIN, 0);
-    digitalWrite(RIGHT_BRAKE_PIN, HIGH);
+    digitalWrite(RIGHT_BRAKE_PIN, HIGH); //high turns brake on
     digitalWrite(LEFT_BRAKE_PIN, HIGH);
 
+    //alert master that we are done
     Wire.beginTransmission(1);
     Wire.write(1);
     Wire.endTransmission();

@@ -83,13 +83,13 @@ int check_color = 0;
 void loop() {
   if(check_color != 0) {
     Serial.println("about to check color");
-    setTimingReg(INTEG_MODE_FREE);//Set trigger mode.Including free mode,manually mode,single synchronizition mode or so.
+    setTimingReg(INTEG_MODE_FREE); //Set trigger mode.Including free mode,manually mode,single synchronizition mode or so.
     setInterruptSourceReg(INT_SOURCE_GREEN); //Set interrupt source 
-    setInterruptControlReg(INTR_LEVEL|INTR_PERSIST_EVERY);//Set interrupt mode
-    setGain(GAIN_1|PRESCALER_4);//Set gain value and prescaler value
-    setEnableADC();//Start ADC of the color sensor
-    read_color();
-    clearInterrupt();  
+    setInterruptControlReg(INTR_LEVEL|INTR_PERSIST_EVERY); //Set interrupt mode
+    setGain(GAIN_1|PRESCALER_4); //Set gain value and prescaler value
+    setEnableADC(); //Start ADC of the color sensor
+    read_color(); //read color values
+    clearInterrupt(); //clear interrupts setup by prescaler
     Wire.beginTransmission(1);
     if(green > red && green > blue && green > GREEN_THRESHOLD) {
       Wire.write(GREEN);
@@ -107,6 +107,7 @@ void loop() {
   delay(5000);
 }
 
+/* These methods are provided by Grove Studio for interfacing with the color sensor */
 void setTimingReg(int x)
 {
    Wire.beginTransmission(COLOR_SENSOR_ADDR);
@@ -153,6 +154,7 @@ void clearInterrupt()
    Wire.write(CLR_INT);
    Wire.endTransmission(); 
 }
+/* End Grove Methods */
 
 void receiveEvent(int howMany) {
   int x = Wire.read(); // receive byte as an integer
