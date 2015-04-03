@@ -83,7 +83,13 @@ int check_color = 0;
 void loop() {
   if(check_color != 0) {
     Serial.println("about to check color");
+    setTimingReg(INTEG_MODE_FREE);//Set trigger mode.Including free mode,manually mode,single synchronizition mode or so.
+    setInterruptSourceReg(INT_SOURCE_GREEN); //Set interrupt source 
+    setInterruptControlReg(INTR_LEVEL|INTR_PERSIST_EVERY);//Set interrupt mode
+    setGain(GAIN_1|PRESCALER_4);//Set gain value and prescaler value
+    setEnableADC();//Start ADC of the color sensor
     read_color();
+    clearInterrupt();  
     Wire.beginTransmission(1);
     if(green > red && green > blue && green > GREEN_THRESHOLD) {
       Wire.write(GREEN);
@@ -99,6 +105,53 @@ void loop() {
   }
 
   delay(5000);
+}
+
+void setTimingReg(int x)
+{
+   Wire.beginTransmission(COLOR_SENSOR_ADDR);
+   Wire.write(REG_TIMING);
+   Wire.write(x);
+   Wire.endTransmission();  
+   delay(100); 
+}
+void setInterruptSourceReg(int x)
+{
+   Wire.beginTransmission(COLOR_SENSOR_ADDR);
+   Wire.write(REG_INT_SOURCE);
+   Wire.write(x);
+   Wire.endTransmission();  
+   delay(100);
+}
+void setInterruptControlReg(int x)
+{
+   Wire.beginTransmission(COLOR_SENSOR_ADDR);
+   Wire.write(REG_INT);
+   Wire.write(x);
+   Wire.endTransmission();  
+   delay(100);
+}
+void setGain(int x)
+{
+   Wire.beginTransmission(COLOR_SENSOR_ADDR);
+   Wire.write(REG_GAIN);
+   Wire.write(x);
+   Wire.endTransmission();
+}
+void setEnableADC()
+{
+ 
+   Wire.beginTransmission(COLOR_SENSOR_ADDR);
+   Wire.write(REG_CTL);
+   Wire.write(CTL_DAT_INIITIATE);
+   Wire.endTransmission();  
+   delay(100);  
+}
+void clearInterrupt()
+{
+   Wire.beginTransmission(COLOR_SENSOR_ADDR);
+   Wire.write(CLR_INT);
+   Wire.endTransmission(); 
 }
 
 void receiveEvent(int howMany) {
