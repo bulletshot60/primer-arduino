@@ -74,13 +74,15 @@ int green, red, blue, clr, ctl;
 void setup()
 {  
   Serial.begin(9600);
-  Wire.begin(3); // join i2c bus (address optional for master)
+  Wire.begin(3); 
+  Wire.onReceive(receiveEvent);
 }
 
 int check_color = 0;
 
 void loop() {
   if(check_color != 0) {
+    Serial.println("about to check color");
     read_color();
     Wire.beginTransmission(1);
     if(green > red && green > blue && green > GREEN_THRESHOLD) {
