@@ -64,9 +64,8 @@
 #define BLUE 106
 #define BLACK 107
 
-#define RED_THRESHOLD 2000
-#define BLUE_THRESHOLD 2000
-#define GREEN_THRESHOLD 2000
+#define RED_THRESHOLD 3500
+#define GREEN_THRESHOLD 3500
 
 int reading_data[20];
 int green, red, blue, clr, ctl;
@@ -91,19 +90,22 @@ void loop() {
     read_color(); //read color values
     clearInterrupt(); //clear interrupts setup by prescaler
     Wire.beginTransmission(1);
-    if(green > red && green > blue && green > GREEN_THRESHOLD) {
+    if(green > red && green > blue && green > GREEN_THRESHOLD && red < RED_THRESHOLD) {
       Wire.write(GREEN);
-    } else if (red > green && red > blue && red > RED_THRESHOLD) {
+      Serial.println("GREEN");
+    } else if (red > green && red > blue && red > RED_THRESHOLD && green < GREEN_THRESHOLD) {
       Wire.write(RED);
-    } else if (blue > green && blue > red && blue > BLUE_THRESHOLD) {
+      Serial.println("RED");
+    } else if (red > RED_THRESHOLD && green > GREEN_THRESHOLD) {
       Wire.write(BLUE);
+      Serial.println("BLUE");
     } else {
       Wire.write(BLACK);
+      Serial.println("BLACK");
     }
     Wire.endTransmission();
     check_color = 0;
   }
-
   delay(5000);
 }
 
