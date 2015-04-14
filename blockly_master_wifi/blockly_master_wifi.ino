@@ -15,8 +15,8 @@
 bool waiting = false;
 int my_color;
 
-char ssid[] = "GRV-Secure";      //  your network SSID (name) 
-char pass[] = "M33@W1r3S3cur3";  // your network password
+char ssid[] = "primer";      //  your network SSID (name) 
+char pass[] = "e727ab1a5d83";  // your network password
 char server[] = "primer-bot.herokuapp.com";
 WiFiClient client;
 bool maze_completed = false;
