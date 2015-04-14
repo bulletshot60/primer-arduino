@@ -81,16 +81,7 @@ void move_right_backward(int amount) {
   move_right(amount, HIGH);
 }
 
-int first = true;
-
 void loop() {
-  delay(5000);
-  if(first) {
-     command = TURN_LEFT; 
-     first = 0;
-  } else {
-     command = 0; 
-  }
   if(command != 0) {
     if(command == TURN_LEFT) {
       for(int i = 0; i < 7; ++i) {
@@ -121,6 +112,7 @@ void loop() {
 
     command = 0;
   }
+  delay(5000);
 }
 
 void right_brake() {
