@@ -63,9 +63,10 @@
 #define GREEN 105
 #define BLUE 106
 #define BLACK 107
-
-#define RED_THRESHOLD 3500
-#define GREEN_THRESHOLD 3500
+#define PURPLE 108
+#define PINK 109
+#define ORANGE 110
+#define YELLOW 111
 
 int reading_data[20];
 int green, red, blue, clr, ctl;
@@ -79,6 +80,14 @@ void setup()
 
 int check_color = 0;
 
+bool between(int value, int middle) {
+  return middle - 500 <= value && value <= middle + 500;
+}
+
+bool between(int value, int middle, int spread) {
+  return middle - spread <= value && value <= middle + spread;
+}
+
 void loop() {
   if(check_color != 0) {
     Serial.println("about to check color");
@@ -90,18 +99,30 @@ void loop() {
     read_color(); //read color values
     clearInterrupt(); //clear interrupts setup by prescaler
     Wire.beginTransmission(1);
-    if(green > red && green > blue && green > GREEN_THRESHOLD && red < RED_THRESHOLD) {
-      Wire.write(GREEN);
-      Serial.println("GREEN");
-    } else if (red > green && red > blue && red > RED_THRESHOLD && green < GREEN_THRESHOLD) {
-      Wire.write(RED);
-      Serial.println("RED");
-    } else if (red > RED_THRESHOLD && green > GREEN_THRESHOLD) {
+    if(between(red, 4500) && between(green, 5750) && between(blue, 5550) && between(clr, 16200, 1500)) {
+      Serial.println("PURPLE"); 
+      Wire.write(PURPLE);
+    } else if(between(red, 2500) && between(green, 5000) && between(blue, 5250) && between(clr, 13500, 1500)) {
+      Serial.println("BLUE"); 
       Wire.write(BLUE);
-      Serial.println("BLUE");
+    } else if(between(red, 12000) && between(green, 8800) && between(blue, 3750) && between(clr, 24500, 1500)) {
+      Serial.println("ORANGE"); 
+      Wire.write(ORANGE);
+    } else if(between(red, 11000) && between(green, 9500) && between(blue, 6500) && between(clr, 26750, 1500)) {
+      Serial.println("PINK");
+      Wire.write(PINK); 
+    } else if(between(red, 10500) && between(green, 13500) && between(blue, 4350) && between(clr, 29000, 1500)) {
+      Serial.println("YELLOW"); 
+      Wire.write(YELLOW);
+    } else if(between(red, 7700) && between(green, 4800) && between(blue, 3000) && between(clr, 16000, 1500)) {
+      Serial.println("RED");
+     Wire.write(RED); 
+    } else if(between(red, 3300) && between(green, 8200) && between(blue, 3800) && between(clr, 16000, 1500)) {
+      Serial.println("GREEN"); 
+      Wire.write(GREEN);
     } else {
-      Wire.write(BLACK);
       Serial.println("BLACK");
+      Wire.write(BLACK);
     }
     Wire.endTransmission();
     check_color = 0;

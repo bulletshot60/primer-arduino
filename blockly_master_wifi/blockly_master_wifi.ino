@@ -11,6 +11,10 @@
 #define GREEN 105
 #define BLUE 106
 #define BLACK 107
+#define PURPLE 108
+#define PINK 109
+#define ORANGE 110
+#define YELLOW 111
 
 bool waiting = false;
 int my_color;
@@ -19,7 +23,6 @@ char ssid[] = "primer";      //  your network SSID (name)
 char pass[] = "e727ab1a5d83";  // your network password
 char server[] = "primer-bot.herokuapp.com";
 WiFiClient client;
-bool maze_completed = false;
 
 void attempt_wifi_connect() {
   Wire.begin(1);
@@ -161,7 +164,6 @@ void turn_right() {
   while(waiting) { delay(1000); }
 }
 
-//move forward (note that this assumes we have nothing in front of us, IE call handle_is_facing_wall first)
 void move_forward() {
   Wire.beginTransmission(2);
   Wire.write(MOVE_FORWARD);
@@ -170,38 +172,16 @@ void move_forward() {
   while(waiting) { delay(1000); }
 }
 
-//are we obstructed
-bool handle_is_facing_wall() {
-  Serial.println("moving forward");
-  Wire.beginTransmission(2);
-  Wire.write(MOVE_FORWARD);
-  Wire.endTransmission();  
-  waiting = true;
-  while(waiting) { delay(1000); }
-  Serial.println("checking color");
-  Wire.beginTransmission(3);
-  Wire.write(1);
-  Wire.endTransmission();
-  waiting = true;
-  while(waiting) { delay(1000); }
-  int color_over = my_color;
-  Serial.println("backing up");
+void move_backward() {
   Wire.beginTransmission(2);
   Wire.write(MOVE_BACKWARD);
   Wire.endTransmission();  
   waiting = true;
   while(waiting) { delay(1000); }
-  
-  return color_over == BLACK;
-}
-
-//was the maze marked as finished
-bool handle_is_completed() {
-  return maze_completed; 
 }
 
 //are we facing a wall of a particular color
-bool handle_is_facing_color(aJsonObject* argument1) {
+bool handle_is_on_color(aJsonObject* argument1) {
   int color = aJson.getArrayItem(argument1, 0)->valueint;
   
   Wire.beginTransmission(3);
@@ -210,10 +190,15 @@ bool handle_is_facing_color(aJsonObject* argument1) {
   waiting = true;
   while(waiting) { delay(1000); }
   
-  if(color == 1) { //red
-    return my_color == RED;
-  } else if (color == 2) { //green
-    return my_color == GREEN;
+  switch(color) {
+    case 1: return color == RED;
+    case 2: return color == GREEN;
+    case 3: return color == YELLOW;
+    case 4: return color == PINK;
+    case 5: return color == BLACK;
+    case 6: return color == PURPLE;
+    case 7: return color == BLUE;
+    case 8: return color == ORANGE;
   }
   
   return false;  
@@ -242,14 +227,8 @@ bool handle_boolean_command(aJsonObject* command_array) {
   int command = aJson.getArrayItem(command_array, 0)->valueint;
   Serial.println(command);
   switch(command) {
-    case 8: // is_facing_wall
-      return handle_is_facing_wall();
-      break;
-    case 9: // is_completed
-      return handle_is_completed();
-      break;
-    case 10: // is_facing_color (01: red, 02: green)
-      return handle_is_facing_color(aJson.getArrayItem(command_array, 1));
+    case 10: // is_on_color (01: red, 02: green, 03: yellow, 04: pink, 05: black, 06: purple, 07: blue, 08: orange)
+      return handle_is_on_color(aJson.getArrayItem(command_array, 1));
       break;
     case 11: // and
       return handle_and(aJson.getArrayItem(command_array, 1), aJson.getArrayItem(command_array, 2));
@@ -278,7 +257,6 @@ int handle_goto(aJsonObject* program, int max_command, int label) {
 void run_program(aJsonObject* program) {
   int current_command = 0, max_command = aJson.getArraySize(program), argument1 = 0;
   bool last_boolean_value = false;
-  maze_completed = false; //mark the maze as not completed
 
   highlight_block(0); //mark that we are not yet running
 
@@ -320,20 +298,14 @@ void run_program(aJsonObject* program) {
         ++current_command;
         break;
       case 6:  // move_forward
-        if(handle_is_facing_wall()) {
-          return;
-        } else {
-          move_forward();
-        }
+        move_forward();
         ++current_command;
         break;
-      case 7:  // maze_completed
-        maze_completed = true;
+      case 7:  // move_backward
+        move_backward();
         ++current_command;
         break;
-      case 8:  // is_facing_wall
-      case 9:  // is_completed
-      case 10: // is_facing_color (01: red, 02: green)
+      case 10: // is_on_color
       case 11: // and
       case 12: // or
       case 13: // not
