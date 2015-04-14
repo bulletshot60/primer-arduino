@@ -110,12 +110,12 @@ void loop() {
         move_left_backward(1);
       }
     } else if(command == MOVE_FORWARD) {
-      for(int i = 0; i < 30; ++i) {
+      for(int i = 0; i < 23; ++i) {
         move_right_backward(1);
         move_left_backward(1);
       }
     } else if(command == MOVE_BACKWARD) {
-      for(int i = 0; i < 30; ++i) {
+      for(int i = 0; i < 23; ++i) {
         move_right_forward(1);
         move_left_forward(1);
       }
